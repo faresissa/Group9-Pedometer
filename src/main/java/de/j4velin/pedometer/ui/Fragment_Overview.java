@@ -130,7 +130,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
         // register a sensorlistener to live update the UI if a step is taken
         SensorManager sm = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-        Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (sensor == null) {
             new AlertDialog.Builder(getActivity()).setTitle(R.string.no_sensor)
                     .setMessage(R.string.no_sensor_explain)
@@ -220,22 +220,30 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
     @Override
     public void onSensorChanged(final SensorEvent event) {
+        float x = event.values[0];
+        float y = event.values[1];
+        float z = event.values[2];
+        double total = (x * x + y * y + z * z)/(SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+
         if (BuildConfig.DEBUG) Logger.log(
                 "UI - sensorChanged | todayOffset: " + todayOffset + " since boot: " +
-                        event.values[0]);
-        if (event.values[0] > Integer.MAX_VALUE || event.values[0] == 0) {
+                        total);
+        if (total > Integer.MAX_VALUE || total == 0) {
             return;
         }
         if (todayOffset == Integer.MIN_VALUE) {
             // no values for today
             // we dont know when the reboot was, so set todays steps to 0 by
             // initializing them with -STEPS_SINCE_BOOT
-            todayOffset = -(int) event.values[0];
+            todayOffset = -(int) total;
             Database db = Database.getInstance(getActivity());
-            db.insertNewDay(Util.getToday(), (int) event.values[0]);
+            db.insertNewDay(Util.getToday(), (int) total);
             db.close();
         }
-        since_boot = (int) event.values[0];
+
+        if ((int) total >  1) {
+            since_boot = (int) total + since_boot;
+        }
         updatePie();
     }
 
