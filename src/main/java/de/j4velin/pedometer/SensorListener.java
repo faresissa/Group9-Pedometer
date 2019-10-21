@@ -82,6 +82,34 @@ public class SensorListener extends Service implements SensorEventListener {
         }
     }
 
+
+    /**
+     * @return true, if notification was updated
+     */
+    public void reset_counter() {
+
+        Database db = Database.getInstance(this);
+        if (db.getSteps(Util.getToday()) == Integer.MIN_VALUE) {
+            int pauseDifference = steps -
+                    getSharedPreferences("pedometer", Context.MODE_PRIVATE)
+                            .getInt("pauseCount", steps);
+            db.insertNewDay(Util.getToday(), steps - pauseDifference);
+            if (pauseDifference > 0) {
+                // update pauseCount for the new day
+                getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit()
+                        .putInt("pauseCount", steps).commit();
+            }
+        }
+        db.saveCurrentSteps(0);
+        db.close();
+        lastSaveSteps = steps;
+        lastSaveTime = System.currentTimeMillis();
+        showNotification(); // update notification
+        WidgetUpdateService.enqueueUpdate(this);
+
+    }
+
+
     /**
      * @return true, if notification was updated
      */

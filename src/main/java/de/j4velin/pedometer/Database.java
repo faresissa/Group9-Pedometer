@@ -380,4 +380,17 @@ public class Database extends SQLiteOpenHelper {
         int re = getSteps(-1);
         return re == Integer.MIN_VALUE ? 0 : re;
     }
+
+
+
+    public void resetToday() {
+
+        int steps = 0;
+        long date = Util.getToday();
+
+        insertDayFromBackup(date, steps);
+
+    }
+
+
 }

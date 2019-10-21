@@ -36,6 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.eazegraph.lib.charts.BarChart;
@@ -63,6 +64,8 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
     private PieModel sliceGoal, sliceCurrent;
     private PieChart pg;
 
+    private Button button;
+
     private int todayOffset, total_start, goal, since_boot, total_days;
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
@@ -82,11 +85,30 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.fragment_overview, null);
-        stepsView = (TextView) v.findViewById(R.id.steps);
-        totalView = (TextView) v.findViewById(R.id.total);
-        averageView = (TextView) v.findViewById(R.id.average);
+        stepsView = v.findViewById(R.id.steps);
+        totalView = v.findViewById(R.id.total);
+        averageView = v.findViewById(R.id.average);
 
-        pg = (PieChart) v.findViewById(R.id.graph);
+        button = v.findViewById(R.id.reset_steps_button);
+
+
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Code here executes on main thread after user presses button
+                Database db = Database.getInstance(getActivity());
+
+                Integer steps = db.getSteps(Util.getToday());
+                Logger.log("Steps in database before reset: " + steps.toString());
+
+                db.saveCurrentSteps(0);
+                steps = db.getSteps(Util.getToday());
+                Logger.log("Steps in database after reset: " + steps.toString());
+                db.close();
+                since_boot = 0;
+            }
+        });
+
+        pg = v.findViewById(R.id.graph);
 
         // slice for the steps taken today
         sliceCurrent = new PieModel("", 0, Color.parseColor("#99CC00"));
@@ -302,7 +324,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
      */
     private void updateBars() {
         SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
-        BarChart barChart = (BarChart) getView().findViewById(R.id.bargraph);
+        BarChart barChart = getView().findViewById(R.id.bargraph);
         if (barChart.getData().size() > 0) barChart.clearChart();
         int steps;
         float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
