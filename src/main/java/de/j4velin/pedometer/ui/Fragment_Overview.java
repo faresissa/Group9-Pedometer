@@ -301,7 +301,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                 averageView.setText(formatter.format((total_start) / total_days));
             }
             else {
-                averageView.setText(0);
+                averageView.setText(formatter.format(0) );
             }
         } else {
             // update only every 10 steps when displaying distance
