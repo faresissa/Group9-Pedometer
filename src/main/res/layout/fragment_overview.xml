@@ -84,21 +84,39 @@
             android:text="@string/total"/>
     </LinearLayout>
 
+
+    <LinearLayout
+        android:id="@+id/reset_and_toggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/averageandtotaltext">
+
+        <Button
+            android:id="@+id/reset_steps_button"
+            android:layout_width="165dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Reset Steps" />
+
+        <Button
+            android:id="@+id/toggle_graph_button"
+            android:layout_width="165dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Day/Month Graph" />
+
+    </LinearLayout>
+
+
     <org.eazegraph.lib.charts.BarChart
         android:id="@+id/bargraph"
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:layout_below="@+id/averageandtotaltext"
-        android:layout_marginTop="50dp"
+        android:layout_below="@+id/reset_and_toggle"
+        android:layout_marginTop="78dp"
         eaze:egLegendHeight="35dp"
-        eaze:egShowValues="true"/>
-
-    <Button
-        android:id="@+id/reset_steps_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/bargraph"
-        android:layout_centerHorizontal="true"
-        android:text="Reset Steps" />
+        eaze:egShowValues="true" />
 
 </RelativeLayout>
