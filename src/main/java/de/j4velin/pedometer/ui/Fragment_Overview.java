@@ -296,7 +296,12 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
         if (showSteps) {
             stepsView.setText(formatter.format(steps_today));
             totalView.setText(formatter.format(total_start + steps_today));
-            averageView.setText(formatter.format((total_start) / (total_days - 1) ));
+            if(total_days == 1) {
+                averageView.setText(formatter.format(0));
+            }
+            else {
+                averageView.setText(formatter.format((total_start) / (total_days - 1) ));
+            }
 
         } else {
             // update only every 10 steps when displaying distance
@@ -315,7 +320,13 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
             }
             stepsView.setText(formatter.format(distance_today));
             totalView.setText(formatter.format(distance_total));
-            averageView.setText(formatter.format(distance_total / total_days));
+            if(total_days == 1) {
+                averageView.setText(formatter.format(0));
+            }
+            else {
+                averageView.setText(formatter.format((total_start) / (total_days - 1) ));
+            }
+
         }
     }
 
@@ -324,7 +335,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
      * be called when switching from step count to distance.
      */
     private void updateBars() {
-        SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
+        SimpleDateFormat df = new SimpleDateFormat("MMM d", Locale.getDefault());
         BarChart barChart = getView().findViewById(R.id.bargraph);
         if (barChart.getData().size() > 0) barChart.clearChart();
         int steps;
