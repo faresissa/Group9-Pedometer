@@ -51,7 +51,7 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/total"
@@ -86,19 +86,35 @@
 
     <org.eazegraph.lib.charts.BarChart
         android:id="@+id/bargraph"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_width="wrap_content"
+        android:layout_height="185dp"
         android:layout_below="@+id/averageandtotaltext"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="254dp"
         eaze:egLegendHeight="35dp"
-        eaze:egShowValues="true"/>
+        eaze:egShowValues="true" />
 
     <Button
         android:id="@+id/reset_steps_button"
+        android:layout_width="406dp"
+        android:layout_height="46dp"
+        android:layout_below="@id/bargraph"
+        android:layout_marginTop="-373dp"
+        android:text="Reset Steps" />
+
+    <Switch
+        android:id="@+id/toggleavg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bargraph"
         android:layout_centerHorizontal="true"
-        android:text="Reset Steps" />
+        android:layout_below="@+id/reset_steps_button"
+         />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleavg"
+        android:layout_centerHorizontal="true"
+        android:layout_weight="1"
+        android:text="Days/Months" />
 
 </RelativeLayout>
