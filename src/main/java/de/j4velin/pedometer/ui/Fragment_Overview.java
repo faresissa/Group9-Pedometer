@@ -47,17 +47,10 @@ import org.eazegraph.lib.models.PieModel;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.time.LocalDate; //
-import java.time.Instant; //
-import java.time.LocalDate; //
-import java.time.LocalDateTime; //
-import java.time.Month; //
-import java.time.format.DateTimeFormatter; //
-import java.time.Period; //
+import java.text.DateFormatSymbols; //
 import java.util.Calendar;
 
 import de.j4velin.pedometer.BuildConfig;
@@ -418,9 +411,11 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
         List<Pair<Long, Integer>> last;
 
         Pair<Long, Integer> tempPair;
-        int monthStepSum;
+        int monthStepSum = 0;
         int monthAvg;
         int previousSums;
+
+        DateFormatSymbols dfs = new DateFormatSymbols();
 
         if (!showSteps) {
             // load some more settings if distance is needed
@@ -435,7 +430,28 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
         tempYear = currentYear;
 
-        for(int i = 0; i < 7; i++) {
+        last = db.getLastEntries(currentDay + 1);
+        if(last.size() > 0) {
+            last.remove(0);
+            for(int k = last.size() - 1; k > -1; k--) {
+                tempPair = last.get(k);
+                monthStepSum += tempPair.second;
+            }
+
+            Logger.log("monthStepSum: " + monthStepSum);
+
+            Logger.log("Entries_per_month: " + currentDay);
+
+            monthAvg = monthStepSum / currentDay;
+
+            bm = new BarModel(date.getMonth().toString().substring(0,3), 0, Color.parseColor("#0099cc"));
+
+            bm.setValue(monthAvg);
+            barChart.addBar(bm);
+
+        }
+
+        for(int i = 0; i < 6; i++) {
             monthStepSum = 0;
             monthAvg = 0;
             previousSums = currentDay;
@@ -456,16 +472,17 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
             last = db.getLastEntries(totalEntries + 1);
 
-            last.remove(0);
-
             //Logger.log("i: "+i+" Last array list: " + Arrays.toString(last.toArray()));
 
             if(last.size()> 0) {
+
+                last.remove(0);
+
                 for(int j = 0; j < i; j++) {
                     previousSums += Entries_per_month[j];
                 }
 
-                for(int j = 0; j < previousSums; j++) {
+                for(int j = 0; j < previousSums && last.size() > 0; j++) {
                     last.remove(0);
                 }
 
@@ -482,7 +499,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
                 monthAvg = monthStepSum / Entries_per_month[i];
 
-                bm = new BarModel(Integer.toString(i), 0, Color.parseColor("#0099cc"));
+                bm = new BarModel(dfs.getMonths()[currentMonth - i - 1].substring(0,3).toUpperCase(), 0, Color.parseColor("#0099cc"));
 
                 bm.setValue(monthAvg);
                 barChart.addBar(bm);
