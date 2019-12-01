@@ -454,7 +454,9 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
             //Logger.log("totalEntries: " + totalEntries);
 
-            last = db.getLastEntries(totalEntries);
+            last = db.getLastEntries(totalEntries + 1);
+
+            last.remove(0);
 
             //Logger.log("i: "+i+" Last array list: " + Arrays.toString(last.toArray()));
 
@@ -475,6 +477,8 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                 }
 
                 Logger.log("monthStepSum: " + monthStepSum);
+
+                Logger.log("Entries_per_month: " + Entries_per_month[i]);
 
                 monthAvg = monthStepSum / Entries_per_month[i];
 
