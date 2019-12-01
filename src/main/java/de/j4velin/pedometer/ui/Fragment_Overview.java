@@ -47,8 +47,11 @@ import org.eazegraph.lib.models.PieModel;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
+import java.util.Date;
 import java.time.LocalDate; //
 import java.text.DateFormatSymbols; //
 import java.util.Calendar;
@@ -69,9 +72,13 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
     private Button button;
 
+    private Button graph_button;
+
     private int todayOffset, total_start, goal, since_boot, total_days;
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
+
+    private boolean monthlyAverage = false;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -108,6 +115,15 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                 Logger.log("Steps in database after reset: " + steps.toString());
                 db.close();
                 since_boot = 0;
+            }
+        });
+
+        graph_button = v.findViewById(R.id.toggle_graph_button);
+
+        graph_button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                monthlyAverage = !monthlyAverage;
+                updateBars();
             }
         });
 
@@ -338,185 +354,188 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
      * be called when switching from step count to distance.
      */
     private void updateBars() {
-//        SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
-//        BarChart barChart = getView().findViewById(R.id.bargraph);
-//        if (barChart.getData().size() > 0) barChart.clearChart();
-//        int steps;
-//        float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
-//        boolean stepsize_cm = true;
-//        if (!showSteps) {
-//            // load some more settings if distance is needed
-//            SharedPreferences prefs =
-//                    getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
-//            stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
-//            stepsize_cm = prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
-//                    .equals("cm");
-//        }
-//        barChart.setShowDecimal(!showSteps); // show decimal in distance view only
-//        BarModel bm;
-//        Database db = Database.getInstance(getActivity());
-//        List<Pair<Long, Integer>> last = db.getLastEntries(8);
-//        db.close();
-//        for (int i = last.size() - 1; i > 0; i--) {
-//            Pair<Long, Integer> current = last.get(i);
-//            steps = current.second;
-//            if (steps > 0) {
-//                bm = new BarModel(df.format(new Date(current.first)), 0,
-//                        steps > goal ? Color.parseColor("#99CC00") : Color.parseColor("#0099cc"));
-//                if (showSteps) {
-//                    bm.setValue(steps);
-//                } else {
-//                    distance = steps * stepsize;
-//                    if (stepsize_cm) {
-//                        distance /= 100000;
-//                    } else {
-//                        distance /= 5280;
-//                    }
-//                    distance = Math.round(distance * 1000) / 1000f; // 3 decimals
-//                    bm.setValue(distance);
-//                }
-//                barChart.addBar(bm);
-//            }
-//        }
-//        if (barChart.getData().size() > 0) {
-//            barChart.setOnClickListener(new OnClickListener() {
-//                @Override
-//                public void onClick(final View v) {
-//                    Dialog_Statistics.getDialog(getActivity(), since_boot).show();
-//                }
-//            });
-//            barChart.startAnimation();
-//        } else {
-//            barChart.setVisibility(View.GONE);
-//        }
-//    }
-        SimpleDateFormat df = new SimpleDateFormat("MMM d", Locale.getDefault());
-        BarChart barChart = getView().findViewById(R.id.bargraph);
-        if (barChart.getData().size() > 0) barChart.clearChart();
-        int steps;
-        float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
-        boolean stepsize_cm = true;
-        LocalDate date = LocalDate.now();
-        Calendar cal = Calendar.getInstance();
-        int currentMonth = date.getMonthValue() - 1;
-        int currentDay = date.getDayOfMonth();
-        int currentYear = date.getYear();
-
-        int tempMonth;
-        int tempYear;
-        int[] Entries_per_month = new int[7];
-        int totalEntries = currentDay;
-
-        Database db = Database.getInstance(getActivity());
-        List<Pair<Long, Integer>> last;
-
-        Pair<Long, Integer> tempPair;
-        int monthStepSum = 0;
-        int monthAvg;
-        int previousSums;
-
-        DateFormatSymbols dfs = new DateFormatSymbols();
-
-        if (!showSteps) {
-            // load some more settings if distance is needed
-            SharedPreferences prefs =
-                    getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
-            stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
-            stepsize_cm = prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
-                    .equals("cm");
-        }
-        barChart.setShowDecimal(!showSteps); // show decimal in distance view only
-        BarModel bm;
-
-        tempYear = currentYear;
-
-        last = db.getLastEntries(currentDay + 1);
-        if(last.size() > 0) {
-            last.remove(0);
-            for(int k = last.size() - 1; k > -1; k--) {
-                tempPair = last.get(k);
-                monthStepSum += tempPair.second;
+        if (!monthlyAverage) {
+            SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
+            BarChart barChart = getView().findViewById(R.id.bargraph);
+            if (barChart.getData().size() > 0) barChart.clearChart();
+            int steps;
+            float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
+            boolean stepsize_cm = true;
+            if (!showSteps) {
+                // load some more settings if distance is needed
+                SharedPreferences prefs =
+                        getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
+                stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
+                stepsize_cm = prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
+                        .equals("cm");
             }
-
-            Logger.log("monthStepSum: " + monthStepSum);
-
-            Logger.log("Entries_per_month: " + currentDay);
-
-            monthAvg = monthStepSum / currentDay;
-
-            bm = new BarModel(date.getMonth().toString().substring(0,3), 0, Color.parseColor("#0099cc"));
-
-            bm.setValue(monthAvg);
-            barChart.addBar(bm);
-
-        }
-
-        for(int i = 0; i < 6; i++) {
-            monthStepSum = 0;
-            monthAvg = 0;
-            previousSums = currentDay;
-
-            tempMonth = currentMonth - i - 1;
-            if(tempMonth < 0) {
-                tempMonth += 12;
-                tempYear -= 1;
+            barChart.setShowDecimal(!showSteps); // show decimal in distance view only
+            BarModel bm;
+            Database db = Database.getInstance(getActivity());
+            List<Pair<Long, Integer>> last = db.getLastEntries(8);
+            db.close();
+            for (int i = last.size() - 1; i > 0; i--) {
+                Pair<Long, Integer> current = last.get(i);
+                steps = current.second;
+                if (steps > 0) {
+                    bm = new BarModel(df.format(new Date(current.first)), 0,
+                            steps > goal ? Color.parseColor("#99CC00") : Color.parseColor("#0099cc"));
+                    if (showSteps) {
+                        bm.setValue(steps);
+                    } else {
+                        distance = steps * stepsize;
+                        if (stepsize_cm) {
+                            distance /= 100000;
+                        } else {
+                            distance /= 5280;
+                        }
+                        distance = Math.round(distance * 1000) / 1000f; // 3 decimals
+                        bm.setValue(distance);
+                    }
+                    barChart.addBar(bm);
+                }
             }
+            db.close();
+            if (barChart.getData().size() > 0) {
+                barChart.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(final View v) {
+                        Dialog_Statistics.getDialog(getActivity(), since_boot).show();
+                    }
+                });
+                barChart.startAnimation();
+            } else {
+                barChart.setVisibility(View.GONE);
+            }
+        } else {
+            SimpleDateFormat df = new SimpleDateFormat("MMM d", Locale.getDefault());
+            BarChart barChart = getView().findViewById(R.id.bargraph);
+            if (barChart.getData().size() > 0) barChart.clearChart();
+            int steps;
+            float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
+            boolean stepsize_cm = true;
+            LocalDate date = LocalDate.now();
+            Calendar cal = Calendar.getInstance();
+            int currentMonth = date.getMonthValue() - 1;
+            int currentDay = date.getDayOfMonth();
+            int currentYear = date.getYear();
 
-            cal.set(tempYear, tempMonth, 1);
-            Entries_per_month[i] = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-            totalEntries += Entries_per_month[i];
+            int tempMonth;
+            int tempYear;
+            int[] Entries_per_month = new int[7];
+            int totalEntries = currentDay;
 
-            Logger.log("i: " + i);
+            Database db = Database.getInstance(getActivity());
+            List<Pair<Long, Integer>> last;
 
-            //Logger.log("totalEntries: " + totalEntries);
+            Pair<Long, Integer> tempPair;
+            int monthStepSum = 0;
+            int monthAvg;
+            int previousSums;
+            LocalDate tempDate;
 
-            last = db.getLastEntries(totalEntries + 1);
+            DateFormatSymbols dfs = new DateFormatSymbols();
 
-            //Logger.log("i: "+i+" Last array list: " + Arrays.toString(last.toArray()));
+            if (!showSteps) {
+                // load some more settings if distance is needed
+                SharedPreferences prefs =
+                        getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
+                stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
+                stepsize_cm = prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
+                        .equals("cm");
+            }
+            barChart.setShowDecimal(!showSteps); // show decimal in distance view only
+            BarModel bm;
 
-            if(last.size()> 0) {
+            tempYear = currentYear;
 
+            last = db.getLastEntries(currentDay + 1);
+            if (last.size() > 0) {
                 last.remove(0);
 
-                for(int j = 0; j < i; j++) {
-                    previousSums += Entries_per_month[j];
-                }
-
-                for(int j = 0; j < previousSums && last.size() > 0; j++) {
-                    last.remove(0);
-                }
-
-                //Logger.log("i: "+i+" Modified Last array list: " + Arrays.toString(last.toArray()));
-
-                for(int k = last.size() - 1; k > -1; k--) {
+                for (int k = last.size() - 1; k > -1; k--) {
                     tempPair = last.get(k);
                     monthStepSum += tempPair.second;
                 }
 
                 Logger.log("monthStepSum: " + monthStepSum);
 
-                Logger.log("Entries_per_month: " + Entries_per_month[i]);
+                Logger.log("Entries_per_month: " + currentDay);
 
-                monthAvg = monthStepSum / Entries_per_month[i];
+                monthAvg = monthStepSum / currentDay;
 
-                bm = new BarModel(dfs.getMonths()[currentMonth - i - 1].substring(0,3).toUpperCase(), 0, Color.parseColor("#0099cc"));
+                bm = new BarModel(date.getMonth().toString().substring(0, 3), 0, Color.parseColor("#0099cc"));
 
                 bm.setValue(monthAvg);
                 barChart.addBar(bm);
+
+            }
+
+            for (int i = 0; i < 6; i++) {
+                monthStepSum = 0;
+                monthAvg = 0;
+                previousSums = currentDay;
+
+                tempMonth = currentMonth - i - 1;
+                if (tempMonth < 0) {
+                    tempMonth += 12;
+                    tempYear -= 1;
+                }
+
+                cal.set(tempYear, tempMonth, 1);
+                Entries_per_month[i] = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                totalEntries += Entries_per_month[i];
+
+                Logger.log("i: " + i);
+
+                //Logger.log("totalEntries: " + totalEntries);
+
+                last = db.getLastEntries(totalEntries + 1);
+
+                //Logger.log("i: "+i+" Last array list: " + Arrays.toString(last.toArray()));
+
+                if (last.size() > 0) {
+                    last.remove(0);
+
+                    for (int j = 0; j < i; j++) {
+                        previousSums += Entries_per_month[j];
+                    }
+
+                    for (int j = 0; j < previousSums && last.size() > 0; j++) {
+                        last.remove(0);
+                    }
+
+                    //Logger.log("i: "+i+" Modified Last array list: " + Arrays.toString(last.toArray()));
+
+                    for (int k = last.size() - 1; k > -1; k--) {
+                        tempPair = last.get(k);
+                        monthStepSum += tempPair.second;
+                    }
+
+                    Logger.log("monthStepSum: " + monthStepSum);
+
+                    Logger.log("Entries_per_month: " + Entries_per_month[i]);
+
+                    monthAvg = monthStepSum / Entries_per_month[i];
+
+                    bm = new BarModel(dfs.getMonths()[currentMonth - i - 1].substring(0, 3).toUpperCase(), 0, Color.parseColor("#0099cc"));
+
+                    bm.setValue(monthAvg);
+                    barChart.addBar(bm);
+                }
+            }
+            db.close();
+            if (barChart.getData().size() > 0) {
+                barChart.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(final View v) {
+                        Dialog_Statistics.getDialog(getActivity(), since_boot).show();
+                    }
+                });
+                barChart.startAnimation();
+            } else {
+                barChart.setVisibility(View.GONE);
             }
         }
-        db.close();
-        if (barChart.getData().size() > 0) {
-            barChart.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(final View v) {
-                    Dialog_Statistics.getDialog(getActivity(), since_boot).show();
-                }
-            });
-            barChart.startAnimation();
-        } else {
-            barChart.setVisibility(View.GONE);
-        }
     }
-
 }
