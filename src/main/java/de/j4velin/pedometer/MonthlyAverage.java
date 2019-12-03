@@ -71,6 +71,12 @@ public class MonthlyAverage {
         return monthStepSum;
     }
 
+    public void removeInitialEntries(int N, List<Pair<Long,Integer>> list) {
+        for (int j = 0; j < N && list.size() > 0; j++) {
+            list.remove(0);
+        }
+    }
+
     public int calculateAvg(int steps, int days) {
         return steps/days;
     }

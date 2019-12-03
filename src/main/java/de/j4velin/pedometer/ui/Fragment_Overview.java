@@ -417,7 +417,6 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
             boolean stepsize_cm = true;
 
             int totalEntries = mA.getCurrentDay();
-
             Database db = Database.getInstance(getActivity());
             List<Pair<Long, Integer>> last;
 
@@ -472,9 +471,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                         previousSums += mA.getOneEntry(j);
                     }
 
-                    for (int j = 0; j < previousSums && last.size() > 0; j++) {
-                        last.remove(0);
-                    }
+                    mA.removeInitialEntries(previousSums,last);
 
                     //Logger.log("i: "+i+" Modified Last array list: " + Arrays.toString(last.toArray()));
 
