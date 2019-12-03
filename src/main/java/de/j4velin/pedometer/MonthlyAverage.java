@@ -39,6 +39,12 @@ public class MonthlyAverage {
         return Entries_per_month[i];
     }
 
+    public void setCurrentMonth(int month) {
+        if(month > -1 && month < 12) {
+            this.currentMonth = month;
+        }
+    }
+
     public void calculateEntries() {
         int tempMonth;
         int tempYear;
