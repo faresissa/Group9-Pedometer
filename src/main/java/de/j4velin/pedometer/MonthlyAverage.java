@@ -1,7 +1,7 @@
 package de.j4velin.pedometer;
 
 import android.graphics.Color;
-import android.util.Pair;
+import android.support.v4.util.Pair;
 
 import org.eazegraph.lib.charts.BarChart;
 import org.eazegraph.lib.models.BarModel;
@@ -56,7 +56,7 @@ public class MonthlyAverage {
 
             cal.set(tempYear, tempMonth, 1);
             temp = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-            System.out.println("Entry value is "+temp);
+            //System.out.println("Entry value is "+temp);
             Entries_per_month[i] = temp;
         }
     }

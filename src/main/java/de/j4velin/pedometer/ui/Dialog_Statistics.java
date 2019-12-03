@@ -17,7 +17,7 @@ package de.j4velin.pedometer.ui;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.util.Pair;
+import android.support.v4.util.Pair;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
