@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,21 +50,66 @@ public class MonthlyAverageTest {
 
     @Test
     public void testGetters() {
-        //December 2019, modify as needed
-        assertTrue(testObj.getCurrentYear() == 2019);
-        assertTrue(testObj.getCurrentMonth() == 11);
+        LocalDate date =  LocalDate.now();
+        //December 03 2019
+        assertTrue(testObj.getCurrentYear() == date.getYear());
+        assertTrue(testObj.getCurrentMonth() == date.getMonthValue() - 1);
+        assertTrue(testObj.getCurrentDay() == date.getDayOfMonth());
+        assertTrue(testObj.getDate().equals(date));
         for(int i = 0; i < 7; i++) {
             assertTrue(testObj.getOneEntry(i) == 0);
         }
     }
 
     @Test
+    public void testSetter() {
+        int currentMonth = testObj.getCurrentMonth();
+        if(currentMonth != 0) {
+            testObj.setCurrentMonth(currentMonth - 1);
+        }
+        else {
+            testObj.setCurrentMonth(currentMonth + 1);
+        }
+        assertFalse(currentMonth == testObj.getCurrentMonth());
+    }
+
+    @Test
     public void testCalculateEntries() {
+        //normal case
         int currentMonth = testObj.getCurrentMonth();
         testObj.calculateEntries();
 
         for(int i = 0; i < 7; i++) {
             assertTrue(testObj.getOneEntry(i) == days_in_month.get(currentMonth - i - 1));
+        }
+
+        //current year to last year case
+        testObj.setCurrentMonth(2);
+        currentMonth = testObj.getCurrentMonth();
+        testObj.calculateEntries();
+
+        for(int i = 0; i < 7; i++) {
+            if(i == 2) {
+                currentMonth += 12;
+            }
+            assertTrue(testObj.getOneEntry(i) == days_in_month.get(currentMonth - i - 1));
+        }
+    }
+
+    @Test
+    public void testRemoveInitialEntries() {
+        ArrayList<Pair<Long, Integer>> list = new ArrayList<Pair<Long, Integer>>();
+
+        for(int i = 0; i < 100; i++) {
+            list.add(new Pair<>(0L,i+1));
+        }
+
+        testObj.removeInitialEntries(20,list);
+
+        assertTrue(list.size() == 80);
+
+        for(int i = 0; i < 80; i++) {
+            assertTrue(list.get(i).second == i + 21);
         }
     }
 
@@ -87,7 +133,6 @@ public class MonthlyAverageTest {
     @Test
     public void testCalculateAverage() {
         int result = 0;
-        MonthlyAverage testObj = new MonthlyAverage();
         result = testObj.calculateAvg(1000, 2);
         assertTrue(result == 500);
     }
