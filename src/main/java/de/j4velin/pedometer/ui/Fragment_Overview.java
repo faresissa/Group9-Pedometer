@@ -63,6 +63,7 @@ import de.j4velin.pedometer.SensorListener;
 import de.j4velin.pedometer.util.API26Wrapper;
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
+import de.j4velin.pedometer.MonthlyAverage;
 
 public class Fragment_Overview extends Fragment implements SensorEventListener {
 
@@ -408,33 +409,21 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                 barChart.setVisibility(View.GONE);
             }
         } else {
-            SimpleDateFormat df = new SimpleDateFormat("MMM d", Locale.getDefault());
+            MonthlyAverage mA = new MonthlyAverage();
             BarChart barChart = getView().findViewById(R.id.bargraph);
             if (barChart.getData().size() > 0) barChart.clearChart();
             int steps;
             float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
             boolean stepsize_cm = true;
-            LocalDate date = LocalDate.now();
-            Calendar cal = Calendar.getInstance();
-            int currentMonth = date.getMonthValue() - 1;
-            int currentDay = date.getDayOfMonth();
-            int currentYear = date.getYear();
 
-            int tempMonth;
-            int tempYear;
-            int[] Entries_per_month = new int[7];
-            int totalEntries = currentDay;
+            int totalEntries = mA.getCurrentDay();
 
             Database db = Database.getInstance(getActivity());
             List<Pair<Long, Integer>> last;
 
-            Pair<Long, Integer> tempPair;
             int monthStepSum = 0;
             int monthAvg;
             int previousSums;
-            LocalDate tempDate;
-
-            DateFormatSymbols dfs = new DateFormatSymbols();
 
             if (!showSteps) {
                 // load some more settings if distance is needed
@@ -445,46 +434,28 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                         .equals("cm");
             }
             barChart.setShowDecimal(!showSteps); // show decimal in distance view only
-            BarModel bm;
 
-            tempYear = currentYear;
-
-            last = db.getLastEntries(currentDay + 1);
+            last = db.getLastEntries(mA.getCurrentDay() + 1);
             if (last.size() > 0) {
                 last.remove(0);
 
-                for (int k = last.size() - 1; k > -1; k--) {
-                    tempPair = last.get(k);
-                    monthStepSum += tempPair.second;
-                }
+                monthStepSum = mA.stepSum(last);
 
                 Logger.log("monthStepSum: " + monthStepSum);
 
-                Logger.log("Entries_per_month: " + currentDay);
+                Logger.log("Entries_per_month: " + mA.getCurrentDay() );
 
-                monthAvg = monthStepSum / currentDay;
+                monthAvg = mA.calculateAvg(monthStepSum, mA.getCurrentDay() );
 
-                bm = new BarModel(date.getMonth().toString().substring(0, 3), 0, Color.parseColor("#0099cc"));
-
-                bm.setValue(monthAvg);
-                barChart.addBar(bm);
-
+                mA.addBar(barChart, mA.getDate(), monthAvg);
             }
 
+            mA.calculateEntries();
+
             for (int i = 0; i < 6; i++) {
-                monthStepSum = 0;
-                monthAvg = 0;
-                previousSums = currentDay;
+                previousSums = mA.getCurrentDay();
 
-                tempMonth = currentMonth - i - 1;
-                if (tempMonth < 0) {
-                    tempMonth += 12;
-                    tempYear -= 1;
-                }
-
-                cal.set(tempYear, tempMonth, 1);
-                Entries_per_month[i] = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-                totalEntries += Entries_per_month[i];
+                totalEntries += mA.getOneEntry(i);
 
                 Logger.log("i: " + i);
 
@@ -498,7 +469,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                     last.remove(0);
 
                     for (int j = 0; j < i; j++) {
-                        previousSums += Entries_per_month[j];
+                        previousSums += mA.getOneEntry(j);
                     }
 
                     for (int j = 0; j < previousSums && last.size() > 0; j++) {
@@ -507,21 +478,15 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
                     //Logger.log("i: "+i+" Modified Last array list: " + Arrays.toString(last.toArray()));
 
-                    for (int k = last.size() - 1; k > -1; k--) {
-                        tempPair = last.get(k);
-                        monthStepSum += tempPair.second;
-                    }
+                    monthStepSum = mA.stepSum(last);
 
                     Logger.log("monthStepSum: " + monthStepSum);
 
-                    Logger.log("Entries_per_month: " + Entries_per_month[i]);
+                    Logger.log("Entries_per_month: " + mA.getOneEntry(i));
 
-                    monthAvg = monthStepSum / Entries_per_month[i];
+                    monthAvg = mA.calculateAvg(monthStepSum, mA.getOneEntry(i));
 
-                    bm = new BarModel(dfs.getMonths()[currentMonth - i - 1].substring(0, 3).toUpperCase(), 0, Color.parseColor("#0099cc"));
-
-                    bm.setValue(monthAvg);
-                    barChart.addBar(bm);
+                    mA.addBar(barChart, mA.getDate().minusMonths(i + 1), monthAvg);
                 }
             }
             db.close();
